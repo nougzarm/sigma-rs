@@ -44,41 +44,18 @@ impl Default for KeccakPermutationState {
     }
 }
 
+impl AsRef<[u8]> for KeccakPermutationState {
+    fn as_ref(&self) -> &[u8] {
+        &self.state
+    }
+}
+
 impl KeccakPermutationState {
     pub fn new() -> Self {
         KeccakPermutationState {
             state: [0u8; 200],
             rate: 136,
             capacity: 64,
-        }
-    }
-
-    fn _bytes_to_keccak_state(&self) -> [[u64; 5]; 5] {
-        let mut flat: [u64; 25] = [0u64; 25];
-        for (i, item) in flat.iter_mut().enumerate() {
-            let start = i * 8;
-            *item = u64::from_le_bytes(self.state[start..start + 8].try_into().unwrap());
-        }
-        let mut matrix = [[0u64; 5]; 5];
-        for y in 0..5 {
-            for x in 0..5 {
-                matrix[x][y] = flat[5 * y + x];
-            }
-        }
-        matrix
-    }
-
-    fn _keccak_state_to_bytes(&mut self, state: [[u64; 5]; 5]) {
-        let mut flat: [u64; 25] = [0; 25];
-        for y in 0..5 {
-            for x in 0..5 {
-                flat[5 * y + x] = state[x][y];
-            }
-        }
-        for (i, item) in flat.iter().enumerate() {
-            let bytes = item.to_le_bytes();
-            let start = i * 8;
-            self.state[start..start + 8].copy_from_slice(&bytes);
         }
     }
 
@@ -233,4 +210,21 @@ where
 
         <<G as Group>::Scalar as PrimeField>::from_repr(repr).expect("Error")
     }
+}
+
+#[test]
+fn test_keccakf() {
+    use spongefish::duplex_sponge::Permutation;
+    
+    let mut sigma_keccak = KeccakPermutationState::default();
+    let mut sf_keccak = spongefish::keccak::AlignedKeccakF1600::new([0; 32]);
+    for _ in 0..10 {
+        sigma_keccak.permute();
+        sf_keccak.permute();
+    }
+    assert_eq!(
+        sigma_keccak.as_ref(),
+        sf_keccak.as_ref(),
+        "Keccak states differ between sigma-rs and spongefish"
+    );
 }
