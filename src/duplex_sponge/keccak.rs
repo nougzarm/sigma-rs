@@ -24,6 +24,12 @@ impl Default for KeccakPermutationState {
     }
 }
 
+impl AsRef<[u8]> for KeccakPermutationState {
+    fn as_ref(&self) -> &[u8] {
+        &self.state
+    }
+}
+
 impl KeccakPermutationState {
     pub fn new() -> Self {
         KeccakPermutationState {
@@ -125,4 +131,21 @@ impl DuplexSpongeInterface for KeccakDuplexSponge {
 
         output
     }
+}
+
+#[test]
+fn test_keccakf() {
+    use spongefish::duplex_sponge::Permutation;
+    
+    let mut sigma_keccak = KeccakPermutationState::default();
+    let mut sf_keccak = spongefish::keccak::AlignedKeccakF1600::new([0; 32]);
+    for _ in 0..10 {
+        sigma_keccak.permute();
+        sf_keccak.permute();
+    }
+    assert_eq!(
+        sigma_keccak.as_ref(),
+        sf_keccak.as_ref(),
+        "Keccak states differ between sigma-rs and spongefish"
+    );
 }
