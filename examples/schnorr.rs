@@ -76,7 +76,7 @@ pub fn discrete_logarithm<G: Group + GroupEncoding>(
 
     // The relation has been defined and is ready to be used in a protocol.
     // Sanity check: ensure `P = x * G`
-    let P = morphism.morphism.group_elements.get(var_P).unwrap();
+    let P = morphism.linear_map.group_elements.get(var_P).unwrap();
     assert_eq!(P, G::generator() * x);
 
     // Output the relation and the witness for the upcoming proof
@@ -103,10 +103,10 @@ fn main() {
     // Generate a non-interactive proof with the witness.
     // The non-interactive proof contains the 3 elements of a sigma protocol transcript: a commitment, a challenge, and a response.
     // This transcript can be transmitted by the prover to any verifier, without revealing any secret information about the prover.
-    let (commitment, challenge, response) = nizk.prove(&witness, &mut OsRng).unwrap();
+    let proof = nizk.prove_batchable(&witness, &mut OsRng).unwrap();
 
     // Verification requires checking the proof against the transcript and constraint system.
     // The verifier can be convinced that the prover indeed knows `x` so that `P = x*G`. This doesn't require any interaction with the prover other than receiving the transcript.
-    let verified = nizk.verify(&commitment, &challenge, &response).is_ok();
+    let verified = nizk.verify_batchable(&proof).is_ok();
     println!("Schnorr NIZK proof verified: {verified}");
 }
