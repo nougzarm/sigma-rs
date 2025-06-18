@@ -24,6 +24,12 @@ impl Default for KeccakPermutationState {
     }
 }
 
+impl AsRef<[u8]> for KeccakPermutationState {
+    fn as_ref(&self) -> &[u8] {
+        &self.state
+    }
+}
+
 impl KeccakPermutationState {
     pub fn new(iv: [u8; 32]) -> Self {
         let rate = 136;
@@ -130,4 +136,39 @@ impl DuplexSpongeInterface for KeccakDuplexSponge {
 
         output
     }
+}
+
+#[test]
+fn test_keccakf() {
+    use spongefish::duplex_sponge::Permutation;
+    use spongefish::keccak::KeccakF1600;
+    let mut sigma_keccak = KeccakPermutationState::default();
+    let mut sf_keccak = KeccakF1600::new([0; 32]);
+    for _ in 0..10 {
+        sigma_keccak.permute();
+        sf_keccak.permute();
+    }
+    assert_eq!(
+        sigma_keccak.as_ref(),
+        sf_keccak.as_ref(),
+        "Keccak states differ between sigma-rs and spongefish"
+    );
+}
+
+#[test]
+fn test_keccaksponge() {
+    use spongefish::keccak::Keccak;
+    use spongefish::DuplexSpongeInterface;
+    let mut got2 = [0u8; 50];
+    let mut sigma_sponge = KeccakDuplexSponge::new(&[0; 32]);
+    let mut sf_sponge = Keccak::new([0; 32]);
+
+    sigma_sponge.absorb(b"hello world");
+    sigma_sponge.absorb(b"abcd");
+    sf_sponge.absorb_unchecked(b"hello world");
+    sf_sponge.absorb_unchecked(b"abcd");
+
+    let got1 = sigma_sponge.squeeze(50);
+    sf_sponge.squeeze_unchecked(&mut got2[0..50]);
+    assert_eq!(got1, got2);
 }
