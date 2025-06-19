@@ -171,4 +171,30 @@ fn test_keccaksponge() {
     let got1 = sigma_sponge.squeeze(50);
     sf_sponge.squeeze_unchecked(&mut got2[0..50]);
     assert_eq!(got1, got2);
+
+    sigma_sponge.absorb(b"abcdefg");
+    sf_sponge.absorb_unchecked(b"abcdefg");
+    sigma_sponge.absorb(b"sponge_test");
+    sf_sponge.absorb_unchecked(b"sponge_test");
+    sigma_sponge.absorb(b"   ");
+    sf_sponge.absorb_unchecked(b"   ");
+    sigma_sponge.absorb(b"1234567890");
+    sf_sponge.absorb_unchecked(b"1234567890");
+    sigma_sponge.absorb(b"");
+    sf_sponge.absorb_unchecked(b"");
+    sigma_sponge.absorb(b"abcdefg");
+    sf_sponge.absorb_unchecked(b"abcdefg");
+    sigma_sponge.absorb(b"abcdefg");
+    sf_sponge.absorb_unchecked(b"abcdefg");
+
+    let got1 = sigma_sponge.squeeze(50);
+    sf_sponge.squeeze_unchecked(&mut got2[0..50]);
+    assert_eq!(got1, got2);
+
+    sigma_sponge.absorb(b"1");
+    sf_sponge.absorb_unchecked(b"2");
+
+    let got1 = sigma_sponge.squeeze(50);
+    sf_sponge.squeeze_unchecked(&mut got2[0..50]);
+    assert_ne!(got1, got2);
 }
