@@ -139,7 +139,7 @@ fn test_keccaksponge() {
     use spongefish::keccak::Keccak;
     use spongefish::DuplexSpongeInterface;
     let mut got2 = [0u8; 50];
-    let mut sigma_sponge = KeccakDuplexSponge::new(&[0; 32]);
+    let mut sigma_sponge = KeccakDuplexSponge::new([0; 32]);
     let mut sf_sponge = Keccak::new([0; 32]);
 
     sigma_sponge.absorb(b"hello world");
